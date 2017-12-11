@@ -244,6 +244,32 @@ pipeline {
           }
         }
 
+        stage('ROS offboard') {
+          agent {
+            docker {
+              image 'px4io/px4-dev-ros:2017-10-23'
+              args '-e CCACHE_BASEDIR=$WORKSPACE -e CCACHE_DIR=/tmp/ccache -v /tmp/ccache:/tmp/ccache:rw'
+            }
+          }
+          steps {
+            sh 'make clean'
+            sh 'bash integrationtests/run_tests.bash `pwd`'
+          }
+        }
+
+        stage('VTOL mission (ROS)') {
+          agent {
+            docker {
+              image 'px4io/px4-dev-ros:2017-10-23'
+              args '-e CCACHE_BASEDIR=$WORKSPACE -e CCACHE_DIR=/tmp/ccache -v /tmp/ccache:/tmp/ccache:rw'
+            }
+          }
+          steps {
+            sh 'make clean'
+            sh 'bash integrationtests/run_tests.bash `pwd`'
+          }
+        }
+
         // temporarily disabled until stable
         //stage('tests coverage') {
         //  agent {
