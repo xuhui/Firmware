@@ -283,13 +283,14 @@ pipeline {
           branch 'master'
           branch 'beta'
           branch 'stable'
+          branch 'pr-jenkins'
         }
         
       }
       steps {
         sh 'echo "uploading to S3"'
         copyArtifacts(projectName: 'Firmware/${BRANCH}', filter: '*.px4', flatten: true)
-        sh 'ls *.px4'
+        sh 'ls'
       }
     }
   }
