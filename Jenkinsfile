@@ -7,22 +7,22 @@ pipeline {
           image 'px4io/px4-dev-base:2017-10-23'
           args '--env CI=true'
         }
+        
       }
       steps {
         sh 'make check_format'
       }
     }
-
     stage('Build') {
       steps {
         script {
           def builds = [:]
-
-
+          
+          
           // nuttx default targets that are archived and uploaded to s3
           for (def option in ["px4fmu-v4", "px4fmu-v4pro", "px4fmu-v5", "aerofc-v1"]) {
             def node_name = "${option}"
-
+            
             builds["${node_name}"] = {
               node {
                 stage("Build Test ${node_name}") {
@@ -43,8 +43,8 @@ pipeline {
               }
             }
           }
-
-
+          
+          
           // special case for fmu-v2/fmu-v3
           builds["px4fmu-v2"] = {
             node {
@@ -68,12 +68,12 @@ pipeline {
               }
             }
           }
-
-
+          
+          
           // nuttx default targets that are archived and uploaded to s3
           for (def option in ["aerocore2", "auav-x21", "crazyflie", "mindpx-v2", "nxphlite-v3", "tap-v1"]) {
             def node_name = "${option}"
-
+            
             builds["${node_name}"] = {
               node {
                 stage("Build Test ${node_name}") {
@@ -93,12 +93,12 @@ pipeline {
               }
             }
           }
-
-
+          
+          
           // other nuttx default targets
           for (def option in ["px4-same70xplained-v1", "px4-stm32f4discovery", "px4cannode-v1", "px4esc-v1", "px4nucleoF767ZI-v1", "s2740vc-v1"]) {
             def node_name = "${option}"
-
+            
             builds["${node_name}"] = {
               node {
                 stage("Build Test ${node_name}") {
@@ -116,12 +116,12 @@ pipeline {
               }
             }
           }
-
-
+          
+          
           // raspberry pi and bebop (armhf)
           for (def option in ["rpi_cross", "bebop_default"]) {
             def node_name = "${option}"
-
+            
             builds["${node_name}"] = {
               node {
                 stage("Build Test ${node_name}") {
@@ -138,12 +138,12 @@ pipeline {
               }
             }
           }
-
-
+          
+          
           // other armhf (to be merged with raspi and bebop)
           for (def option in ["ocpoc_ubuntu"]) {
             def node_name = "${option}"
-
+            
             builds["${node_name}"] = {
               node {
                 stage("Build Test ${node_name}") {
@@ -160,12 +160,12 @@ pipeline {
               }
             }
           }
-
-
+          
+          
           // snapdragon eagle (posix + qurt)
           for (def option in ["eagle_default"]) {
             def node_name = "${option}"
-
+            
             builds["${node_name}"] = {
               node {
                 stage("Build Test ${node_name}") {
@@ -184,12 +184,12 @@ pipeline {
               }
             }
           }
-
-
+          
+          
           // GCC7 tests
           for (def option in ["posix_sitl_default", "nuttx_px4fmu-v5_default"]) {
             def node_name = "${option}"
-
+            
             builds["${node_name} (GCC7)"] = {
               node {
                 stage("Build Test ${node_name} (GCC7)") {
@@ -206,36 +206,22 @@ pipeline {
               }
             }
           }
-
+          
           builds.failFast = true
           parallel builds
         }
+        
       }
     }
-
     stage('Test') {
       parallel {
-
-        // temporarily disabled until build resources are available
-        //stage('clang-tidy') {
-        //  agent {
-        //    docker {
-        //      image 'px4io/px4-dev-clang:2017-10-23'
-        //      args '-e CCACHE_BASEDIR=$WORKSPACE -e CCACHE_DIR=/tmp/ccache -v /tmp/ccache:/tmp/ccache:rw'
-        //    }
-        //  }
-        //  steps {
-        //    sh 'make clean'
-        //    sh 'make clang-tidy-quiet'
-        //  }
-        //}
-
         stage('tests') {
           agent {
             docker {
               image 'px4io/px4-dev-base:2017-10-23'
               args '-e CCACHE_BASEDIR=$WORKSPACE -e CCACHE_DIR=/tmp/ccache -v /tmp/ccache:/tmp/ccache:rw'
             }
+            
           }
           steps {
             sh 'make clean'
@@ -243,60 +229,40 @@ pipeline {
             junit 'build/posix_sitl_default/JUnitTestResults.xml'
           }
         }
-
-        // temporarily disabled until stable
-        //stage('tests coverage') {
-        //  agent {
-        //    docker {
-        //      image 'px4io/px4-dev-base:2017-10-23'
-        //      args '-e CCACHE_BASEDIR=$WORKSPACE -e CCACHE_DIR=/tmp/ccache -v /tmp/ccache:/tmp/ccache:rw'
-        //    }
-        //  }
-        //  steps {
-        //    sh 'make clean'
-        //    sh 'make tests_coverage'
-        //    // publish html
-        //    publishHTML target: [
-        //      allowMissing: false,
-        //      alwaysLinkToLastBuild: false,
-        //      keepAll: true,
-        //      reportDir: 'build/posix_sitl_default/coverage-html',
-        //      reportFiles: '*',
-        //      reportName: 'Coverage Report'
-        //    ]
-        //  }
-        //}
-
       }
     }
-
     stage('Generate Metadata') {
-
       parallel {
-
         stage('airframe') {
           agent {
-            docker { image 'px4io/px4-dev-base:2017-10-23' }
+            docker {
+              image 'px4io/px4-dev-base:2017-10-23'
+            }
+            
           }
           steps {
             sh 'make airframe_metadata'
             archiveArtifacts(artifacts: 'airframes.md, airframes.xml', fingerprint: true)
           }
         }
-
         stage('parameter') {
           agent {
-            docker { image 'px4io/px4-dev-base:2017-10-23' }
+            docker {
+              image 'px4io/px4-dev-base:2017-10-23'
+            }
+            
           }
           steps {
             sh 'make parameters_metadata'
             archiveArtifacts(artifacts: 'parameters.md, parameters.xml', fingerprint: true)
           }
         }
-
         stage('module') {
           agent {
-            docker { image 'px4io/px4-dev-base:2017-10-23' }
+            docker {
+              image 'px4io/px4-dev-base:2017-10-23'
+            }
+            
           }
           steps {
             sh 'make module_documentation'
@@ -305,26 +271,28 @@ pipeline {
         }
       }
     }
-
     stage('S3 Upload') {
       agent {
-        docker { image 'px4io/px4-dev-base:2017-10-23' }
+        docker {
+          image 'px4io/px4-dev-base:2017-10-23'
+        }
+        
       }
-
       when {
         anyOf {
           branch 'master'
           branch 'beta'
           branch 'stable'
         }
+        
       }
-
       steps {
         sh 'echo "uploading to S3"'
+        copyArtifacts(projectName: 'Firmware/${BRANCH}', filter: '*.px4', flatten: true)
+        sh 'ls *.px4'
       }
     }
   }
-
   options {
     buildDiscarder(logRotator(numToKeepStr: '5'))
     timeout(time: 60, unit: 'MINUTES')
