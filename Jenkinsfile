@@ -289,13 +289,13 @@ pipeline {
       }
       steps {
         sh 'echo "uploading to S3"'
-        copyArtifacts(projectName: 'Firmware/${BRANCH}', filter: '*.px4', flatten: true)
+        copyArtifacts(projectName: "Firmware/${env.BRANCH}", filter: '*.px4', flatten: true)
         sh 'ls'
       }
     }
   }
   options {
     buildDiscarder(logRotator(numToKeepStr: '5'))
-    timeout(time: 60, unit: 'MINUTES')
+    timeout(time: 120, unit: 'MINUTES')
   }
 }
