@@ -708,6 +708,7 @@ MulticopterPositionControl::parameters_update(bool force)
 
 		/* Get parameter values used to fly within optical flow sensor limits */
 		param_t handle = param_find("SENS_FLOW_MINRNG");
+
 		if (handle != PARAM_INVALID) {
 			param_get(handle, &_min_hagl_limit);
 		}
@@ -2482,10 +2483,11 @@ MulticopterPositionControl::calculate_velocity_setpoint(float dt)
 	}
 
 	// encourage pilot to respect respect flow sensor minimum height limitations
-	if (_local_pos.limit_hagl && _local_pos.dist_bottom_valid && _control_mode.flag_control_manual_enabled && _control_mode.flag_control_altitude_enabled) {
+	if (_local_pos.limit_hagl && _local_pos.dist_bottom_valid && _control_mode.flag_control_manual_enabled
+	    && _control_mode.flag_control_altitude_enabled) {
 		// If distance to ground is less than limit, increment set point upwards at up to the landing descent rate
 		if (_local_pos.dist_bottom < _min_hagl_limit) {
-			float climb_rate_bias = fminf(_params.pos_p(2) * (_min_hagl_limit - _local_pos.dist_bottom) , _params.land_speed);
+			float climb_rate_bias = fminf(_params.pos_p(2) * (_min_hagl_limit - _local_pos.dist_bottom), _params.land_speed);
 			_vel_sp(2) -= climb_rate_bias;
 			_pos_sp(2) -= climb_rate_bias * dt;
 
@@ -3058,18 +3060,19 @@ MulticopterPositionControl::task_main()
 		/* set dt for control blocks */
 		setDt(dt);
 
-			/* set default max velocity in xy to vel_max
-			 * Apply estimator limits if applicable */
+		/* set default max velocity in xy to vel_max
+		 * Apply estimator limits if applicable */
 		if (PX4_ISFINITE(_local_pos.vxy_max)) {
-			_vel_max_xy = fminf(_params.vel_max_xy , _local_pos.vxy_max);
+			_vel_max_xy = fminf(_params.vel_max_xy, _local_pos.vxy_max);
 			// Allow for a minimum of 0.3 m/s for repositioning
-			_vel_max_xy = fmaxf(_vel_max_xy , 0.3f);
+			_vel_max_xy = fmaxf(_vel_max_xy, 0.3f);
 
 		} else {
 			if (_vel_max_xy < _params.vel_max_xy) {
 				_vel_max_xy += dt * _params.acc_max_flow_xy;
 			}
-			_vel_max_xy = fminf(_vel_max_xy , _params.vel_max_xy);
+
+			_vel_max_xy = fminf(_vel_max_xy, _params.vel_max_xy);
 
 		}
 
